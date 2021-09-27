@@ -21,11 +21,10 @@ with ((import (fetchTarball {
 in pkgs.mkShell {
   packages = [
     vscode-with-extensions
-    pkgs.z3
     pkgs.yices
     pkgs.prover9
     pkgs.python38
+    pkgs.python38Packages.setuptools
     pkgs.python38Packages.z3
-    pkgs.python38Packages.pysmt
   ];
 }
