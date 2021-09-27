@@ -24,5 +24,8 @@ in pkgs.mkShell {
     pkgs.z3
     pkgs.yices
     pkgs.prover9
+    pkgs.python38
+    pkgs.python38Packages.z3
+    pkgs.python38Packages.pysmt
   ];
 }
