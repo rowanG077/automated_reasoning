@@ -1,12 +1,11 @@
 with ((import (fetchTarball {
-  name = "nixpkgs-master-2021-05-12";
-  url = "https://github.com/NixOS/nixpkgs/archive/refs/tags/21.05.tar.gz";
-  sha256 = "1ckzhh24mgz6jd1xhfgx0i9mijk6xjqxwsshnvq789xsavrmsc36";
+  name = "nixpkgs-master-2021-09-30";
+  url = "https://github.com/NixOS/nixpkgs/archive/7017a662007a2d7becd3b0298b341bcaea2d36d3.tar.gz";
+  sha256 = "0ykahd48ygmg9hxy18bb017906dlv92ln9ajcdl6zglcfy0c6jj1";
 }) {}));
   let extensions = (with pkgs.vscode-extensions; [
       ms-vsliveshare.vsliveshare
-      ms-python.python
-      bbenoist.Nix
+      bbenoist.nix
       redhat.vscode-yaml
     ] ++ pkgs.vscode-utils.extensionsFromVscodeMarketplace [{
       name = "smt-lib-syntax";
