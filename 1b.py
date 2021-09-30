@@ -1,4 +1,5 @@
 from z3 import *
+import sys
 
 num_trucks = 8
 num_cooled = 3
@@ -44,7 +45,7 @@ for n in range(num_trucks):
     opt.add(dupple_in_truck >= 0)
 
     # explosive mix
-    opt.add(Xor(prittle_in_truck > 0, crottle_in_truck > 0))
+    opt.add(Not(And(prittle_in_truck > 0, crottle_in_truck > 0)))
 
     total_weight = nuzzle_weight * nuzzle_in_truck \
                    + prittle_weight * prittle_in_truck \
@@ -73,5 +74,11 @@ opt.add(sum(crottles_in_trucks) == crottle_required)
 opt.add(sum(dupples_in_trucks) == dupple_required)
 opt.maximize(sum(prittles_in_trucks))
 
-print(opt.check())
-print(opt.model())
+res = opt.check()
+if res == unsat:
+    print("unsat")
+    sys.exit(1)
+
+model = opt.model()
+prittles = sum([model[var].as_long() for var in prittles_in_trucks])
+print(f"maximum amount of prittles: {prittles}")
