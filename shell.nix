@@ -25,5 +25,6 @@ in pkgs.mkShell {
     pkgs.python38
     pkgs.python38Packages.setuptools
     pkgs.python38Packages.z3
+    pkgs.python38Packages.pycairo
   ];
 }
