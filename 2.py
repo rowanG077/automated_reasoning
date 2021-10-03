@@ -4,7 +4,7 @@ import math
 
 chip_size = (30, 30)
 
-pow_min_offset = (17, 17)
+pow_min_offset = (18, 18)
 
 pow_sizes = [
     (4, 3),
@@ -129,7 +129,7 @@ for i in range(len(all_sizes)):
         not_y_overlap = Or(p1y2 <= p2y1, p2y2 <= p1y1)
         s.add(Or(not_x_overlap, not_y_overlap))
 
-# create the unique pairs of power components and ensure
+# create unique pairs of power components and ensure
 # their centers are far enough away from eachother
 for i in range(len(pow_sizes)):
     for j in range(i + 1, len(pow_sizes)):
@@ -180,12 +180,8 @@ for i in range(len(com_sizes)):
         connected = Or(x_edge_match, y_edge_match) 
 
         pow_edges.append(connected)
-    
-    constraint = Or(pow_edges[0], pow_edges[1])
-    for j in range(2, len(pow_sizes)):
-        constraint = Or(constraint, pow_edges[j])
 
-    s.add(constraint)
+    s.add(Or(*pow_edges))
 
 res = s.check()
 if res == unsat:
