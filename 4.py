@@ -20,8 +20,10 @@ def run(model, n):
     
     if b == 700 + n:
         print(f"crash: b is {b}")
+        return True
     else:
         print(f"no crash: b is {b}")
+        return False
 
 
 for n in range(1, 11):
@@ -42,8 +44,7 @@ for n in range(1, 11):
     res = s.check()
     if res == unsat:
         print(f"unsat for n == {n}")
-        run(model, n)
+        assert(run(model, n) == False)
     else:
         model = s.model()
-        print(model)
-        run(model, n)
+        assert(run(model, n) == True)
