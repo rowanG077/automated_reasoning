@@ -2,10 +2,6 @@ from z3 import *
 
 num_loops = 10
 
-a_l = [Int(f"a_{i}") for i in range(num_loops + 1)]
-b_l = [Int(f"b_{i}") for i in range(num_loops + 1)]
-checks = [Bool(f"check_{i}") for i in range(num_loops)]
-
 def run(model, n):
     a = 1
     b = 1
@@ -27,6 +23,10 @@ def run(model, n):
 
 
 for n in range(1, 11):
+    a_l = [Int(f"a_{i}") for i in range(num_loops + 1)]
+    b_l = [Int(f"b_{i}") for i in range(num_loops + 1)]
+    checks = [Bool(f"check_{i}") for i in range(num_loops)]
+
     s = Solver()
 
     # initial conditions
