@@ -15,10 +15,10 @@ def run(model, n):
             a = a + i
     
     if b == 700 + n:
-        print(f"crash: b is {b}")
+        # print(f"crash: b is {b}")
         return True
     else:
-        print(f"no crash: b is {b}")
+        # print(f"no crash: b is {b}")
         return False
 
 
@@ -43,8 +43,9 @@ for n in range(1, 11):
 
     res = s.check()
     if res == unsat:
-        print(f"unsat for n == {n}")
+        print(f"{n} -> no crash")
         assert(run(model, n) == False)
     else:
         model = s.model()
+        print(f"{n} -> crashed")
         assert(run(model, n) == True)

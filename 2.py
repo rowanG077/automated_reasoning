@@ -102,13 +102,11 @@ for i in range(len(all_sizes)):
     sx, sy = all_sizes[i]
     x, y = all_positions[i]
     r = all_rotated[i]
-
-    pos = And(r ==  False, And(x + sx <= chip_size[0], y + sy <= chip_size[1]))
-    pos_rotated = And(r == True, And(x + sy <= chip_size[0], y + sx <= chip_size[1]))
     
     s.add(x >= 0)
     s.add(y >= 0)
-    s.add(Or(pos, pos_rotated))
+    s.add(x + If(r, sy, sx) <= chip_size[0])
+    s.add(y + If(r, sx, sy) <= chip_size[1])
 
 # Create unique pairs of all components and ensure they don't overlap
 for i in range(len(all_sizes)):
@@ -172,11 +170,9 @@ for i in range(len(com_sizes)):
         p2x2 = If(r2, p2x1 + s2y, p2x1 + s2x)
         p2y2 = If(r2, p2y1 + s2x, p2y1 + s2y)
 
-        x_overlap = And(p1x2 > p2x1, p2x2 > p1x1)
-        x_edge_match = Or(And(x_overlap, p1y2 == p2y1), And(x_overlap, p2y2 == p1y1))
+        x_edge_match = And(p1x2 > p2x1, p2x2 > p1x1, Or(p1y2 == p2y1, p2y2 == p1y1))
+        y_edge_match = And(p1y2 > p2y1, p2y2 > p1y1, Or(p1x2 == p2x1, p2x2 == p1x1))
 
-        y_overlap = And(p1y2 > p2y1, p2y2 > p1y1)
-        y_edge_match = Or(And(y_overlap,  p1x2 == p2x1), And(y_overlap, p2x2 == p1x1))
         connected = Or(x_edge_match, y_edge_match) 
 
         pow_edges.append(connected)

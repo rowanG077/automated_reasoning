@@ -81,7 +81,7 @@ for k1 in range(num_participants):
         s.add(num_meets <= 4)
 
         # A) Every two people must meet at least once
-        #s.add(num_meets >= 1)
+        # s.add(num_meets >= 1)
 
         # B) Every two peopple meet at most 3 times
         s.add(num_meets <= 3)
