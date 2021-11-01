@@ -7,7 +7,7 @@ max_weight = 8000
 max_pallets = 8
 
 nuzzle_weight = 700
-nuzzle_required = 4 
+nuzzle_required = 4
 prittle_weight = 400
 skipple_weight = 1000
 skipple_required = 8
@@ -52,7 +52,7 @@ for n in range(num_trucks):
                    + skipple_weight * skipple_in_truck \
                    + crottle_weight * crottle_in_truck \
                    + dupple_weight * dupple_in_truck
-    
+
     total_pallets = nuzzle_in_truck \
                     + prittle_in_truck \
                     + skipple_in_truck \
@@ -74,11 +74,38 @@ opt.add(sum(crottles_in_trucks) == crottle_required)
 opt.add(sum(dupples_in_trucks) == dupple_required)
 opt.maximize(sum(prittles_in_trucks))
 
+def visualize_solution(model):
+    ns = 0
+    ps = 0
+    ss = 0
+    cs = 0
+    ds = 0
+    for i in range(num_trucks):
+        n = model[nuzzles_in_trucks[i]].as_long()
+        p = model[prittles_in_trucks[i]].as_long()
+        s = model[skipples_in_trucks[i]].as_long()
+        c = model[crottles_in_trucks[i]].as_long()
+        d = model[dupples_in_trucks[i]].as_long()
+        ns += n
+        ps += p
+        ss += s
+        cs += c
+        ds += d
+
+        weight = nuzzle_weight * n \
+                   + prittle_weight * p \
+                   + skipple_weight * s \
+                   + crottle_weight * c \
+                   + dupple_weight * d
+
+        print(f"truck {i} (total weight {weight}) nuzzles {n} prittles {p} skipples {s} crottles {c} dupples:{d}")
+
+    print(f"total number of: nuzzles {ns} prittles {ps} skipples {ss} crottles {cs} dupples:{ds}")
+
 res = opt.check()
 if res == unsat:
     print("unsat")
     sys.exit(1)
 
 model = opt.model()
-prittles = sum([model[var].as_long() for var in prittles_in_trucks])
-print(f"maximum amount of prittles: {prittles}")
+visualize_solution(model)
