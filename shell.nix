@@ -14,12 +14,15 @@ with ((import (fetchTarball {
       sha256 = "Vmt1gFRai52WmmrqHZKxR0VbV4AdT0VtEX3p8eV7CNo=";
     }]);
 
+  nuSMV = pkgs.callPackage ./nuSMV.nix { };
+
   vscode-with-extensions = pkgs.vscode-with-extensions.override {
     vscodeExtensions = extensions;
   };
 in pkgs.mkShell {
   packages = [
     vscode-with-extensions
+    nuSMV
     pkgs.yices
     pkgs.prover9
     pkgs.python38
