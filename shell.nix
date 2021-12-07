@@ -12,6 +12,11 @@ with ((import (fetchTarball {
       publisher = "martinring";
       version = "0.0.1";
       sha256 = "Vmt1gFRai52WmmrqHZKxR0VbV4AdT0VtEX3p8eV7CNo=";
+    }] ++ pkgs.vscode-utils.extensionsFromVscodeMarketplace [{
+      name = "vscode-nusmv";
+      publisher = "liamwalsh98";
+      version = "0.0.1";
+      sha256 = "subyhXjhV9xYbRuB5iVLxNFR4Fh2HXKpyah13IBEU9s=";
     }]);
 
   nuSMV = pkgs.callPackage ./nuSMV.nix { };
