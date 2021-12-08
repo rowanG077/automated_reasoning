@@ -19,14 +19,14 @@ def path(channel, node_target):
 
     return shortest
 
-def case(cond, set_stmt, set_channel):
+def case(cond, set_stmt, skip_chan_reset):
     tmp = []
     tmp.append("case")
     tmp.append(f"  {cond} : ")
 
     tmp2 = [set_stmt]
     for other_chan in range(num_channels):
-        if other_chan == set_channel:
+        if other_chan in skip_chan_reset:
             continue
         tmp2.append(f"next(c_{other_chan}) = c_{other_chan}")
 
@@ -51,7 +51,7 @@ with open(out_filename, 'w') as f:
 
     f.write("TRANS\n")
 
-    deadlock_cases = []
+    network_cases = []
     cases = []
     for chan in range(num_channels):
         src = channel_src[chan]
@@ -62,11 +62,11 @@ with open(out_filename, 'w') as f:
             for send_dst in main_nodes:
                 if src != send_dst:
                     cond = f"c_{chan} = 0"
-                    deadlock_cases.append(f"({cond})")
+                    network_cases.append(f"({cond})")
                     cases.append(case(
                         cond,
                         f"next(c_{chan}) = {send_dst}",
-                        chan
+                        [chan]
                     ))
 
         for m, p in [(m, path(chan, m)) for m in main_nodes]:
@@ -75,23 +75,23 @@ with open(out_filename, 'w') as f:
             # Current channel connects to destination (receive)
             if len(p) == 1:
                 cond = f"c_{chan} = {m}"
-                deadlock_cases.append(f"({cond})")
+                network_cases.append(f"({cond})")
                 cases.append(case(
                     cond,
                     f"next(c_{chan}) = 0",
-                    chan
+                    [chan]
                 ))
             # current channel doesn't connect to destination (process)
             else:
                 next_chan = p[1]
-                cond = f"c_{chan} != 0 & c_{next_chan} = 0 & c_{chan} != {dst} & c_{chan} = {m}"
-                deadlock_cases.append(f"({cond})")
+                cond = f"c_{next_chan} = 0 & c_{chan} = {m}"
+                network_cases.append(f"({cond})")
                 cases.append(case(
                     cond,
-                    f"next(c_{next_chan}) = c_{chan} & c_{chan} = 0",
-                    chan
+                    f"next(c_{next_chan}) = c_{chan} & next(c_{chan}) = 0",
+                    [chan, next_chan]
                 ))
 
     f.write(" | \n".join(cases))
-    f.write("\n\nCTLSPEC !EF(\n  " + " |\n  ".join(deadlock_cases) + "\n)\n")
-    
+    f.write("\n\nCTLSPEC !EF(!(\n  " + " |\n  ".join(network_cases) + "\n))\n")
+
