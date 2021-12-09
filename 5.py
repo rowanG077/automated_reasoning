@@ -3,8 +3,29 @@ from copy import deepcopy
 num_channels = 27
 num_nodes = 17
 
-channel_src =   [1, 2, 3,  3, 4, 4, 5, 6, 7,  7, 8,  8,  9, 10, 11, 11, 12, 13, 14, 15, 15, 16, 16, 17, 17, 17, 17]
-channel_dest =  [2, 3, 4, 17, 5, 6, 6, 7, 8, 17, 9, 10, 10, 11, 12, 17, 13, 14, 15, 16, 17,  1,  2,  3,  7, 11, 15]
+# Taken from https://www.win.tue.nl/~hzantema/defnetw.txt.
+channel_src  =  [1, 2, 3, 4, 5, 6, 7, 8,  9, 10, 11, 12, 13, 14, 15, 16,  3, 17,  7, 17, 11, 17, 15, 17, 16, 4,  8]
+channel_dest =  [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,  1, 17,  3, 17,  7, 17, 11, 17, 15,  2, 6, 10]
+
+routes = [
+    [ 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+    [ 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 ],
+    [ 17, 17, 0, 3, 3, 3, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17 ],
+    [ 26, 26, 26, 0, 4, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26 ],
+    [ 5, 5, 5, 5, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5 ],
+    [ 6, 6, 6, 6, 6, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6 ],
+    [ 19, 19, 19, 19, 19, 19, 0, 7, 7, 7, 19, 19, 19, 19, 19, 19, 19 ],
+    [ 27, 27, 27, 27, 27, 27, 27, 0, 8, 27, 27, 27, 27, 27, 27, 27, 27 ],
+    [ 9, 9, 9, 9, 9, 9, 9, 9, 0, 9, 9, 9, 9, 9, 9, 9, 9 ],
+    [ 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 10, 10, 10, 10, 10, 10, 10 ],
+    [ 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 0, 11, 11, 11, 21, 21, 21 ],
+    [ 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 0, 12, 12, 12, 12, 12 ],
+    [ 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 0, 13, 13, 13, 13 ],
+    [ 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 0, 14, 14, 14 ],
+    [ 15, 15, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 0, 15, 23 ],
+    [ 16, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 0, 25 ],
+    [ 24, 24, 18, 18, 18, 18, 20, 20, 20, 20, 22, 22, 22, 22, 24, 24, 0 ]
+]
 
 main_nodes_options = [
     [1, 5, 9, 13],
@@ -18,25 +39,17 @@ main_nodes_options = [
     [5, 11, 14],
 ]
 
-def path(channel, node_target, visited_channels = []):
-    if channel in visited_channels:
-        return None
-    dest = channel_dest[channel]
-    if dest == node_target:
-        return [channel]
+def path(src, dst):
+    if src == dst:
+        return []
 
-    visited_channels = deepcopy(visited_channels)
-    visited_channels.append(channel)
+    chan = routes[src - 1][dst - 1]
+    p = [chan - 1]
+    while channel_dest[chan - 1] != dst:
+        chan = routes[channel_dest[chan - 1] - 1][dst - 1]
+        p.append(chan - 1)
 
-    paths = [path(i, node_target, visited_channels) for i in range(num_channels) if channel_src[i] == dest]
-
-    paths = list(sorted([p for p in paths if p != None], key = len))
-    if len(paths) > 0:
-        shortest_path = deepcopy(paths[0])
-        shortest_path.insert(0, channel)
-        return shortest_path
-    else:
-        return None
+    return p
 
 def case(cond, set_stmt, skip_chan_reset):
     tmp = []
@@ -60,11 +73,6 @@ def case(cond, set_stmt, skip_chan_reset):
     tmp.append("esac")
     return "\n".join(tmp)
 
-for c in path(19, 13, []):
-    s = channel_src[c]
-    d = channel_dest[c]
-    print(f"Going from {s} -> {d} over channel: {c}")
-
 for i, main_nodes in enumerate(main_nodes_options):
     exercise = str(chr(ord('a') + i))
     print(f"Generating smv for {exercise}).")
@@ -81,45 +89,50 @@ for i, main_nodes in enumerate(main_nodes_options):
 
         network_cases = []
         cases = []
-        for chan in range(num_channels):
-            src = channel_src[chan]
-            dst = channel_dest[chan]
 
-            # # Node can send.
-            if src in main_nodes:
-                for send_dst in main_nodes:
-                    if src != send_dst:
-                        cond = f"c_{chan} = 0"
-                        network_cases.append(f"({cond})")
-                        cases.append(case(
-                            cond,
-                            f"next(c_{chan}) = {send_dst}",
-                            [chan]
-                        ))
-
-            for m, p in [(m, path(chan, m)) for m in main_nodes]:
-                if src == m:
+        # Only routes between main nodes are relevant
+        for n in main_nodes:
+            for m in main_nodes:
+                if n == m:
                     continue
-                # Current channel connects to destination (receive)
-                if len(p) == 1:
-                    cond = f"c_{chan} = {m}"
+
+                route = path(n, m)
+
+                # Can always send on the first channel
+                start_chan = route[0]
+                cond = f"c_{start_chan} = 0"
+                network_cases.append(f"({cond})")
+                cases.append(case(
+                    cond,
+                    f"next(c_{start_chan}) = {m}",
+                    [start_chan]
+                ))
+
+                # Can always receive on the final channel
+                end_chan = route[-1]
+                cond = f"c_{end_chan} = {m}"
+                network_cases.append(f"({cond})")
+                cases.append(case(
+                    cond,
+                    f"next(c_{end_chan}) = 0",
+                    [end_chan]
+                ))
+
+                # Processing is only relevant between channels
+                if len(route) == 1:
+                    continue
+
+                for r in range(len(route) - 1):
+                    cur_chan = route[r]
+                    next_chan = route[r + 1]
+
+                    cond = f"c_{cur_chan} = {m} & c_{next_chan} = 0"
                     network_cases.append(f"({cond})")
                     cases.append(case(
                         cond,
-                        f"next(c_{chan}) = 0",
-                        [chan]
-                    ))
-                # current channel doesn't connect to destination (process)
-                else:
-                    next_chan = p[1]
-                    cond = f"c_{next_chan} = 0 & c_{chan} = {m}"
-                    network_cases.append(f"({cond})")
-                    cases.append(case(
-                        cond,
-                        f"next(c_{next_chan}) = c_{chan} & next(c_{chan}) = 0",
-                        [chan, next_chan]
+                        f"next(c_{cur_chan}) = 0 & next(c_{next_chan}) = {m}",
+                        [cur_chan, next_chan]
                     ))
 
         f.write(" | \n".join(cases))
         f.write("\n\nCTLSPEC !EF(!(\n  " + " |\n  ".join(network_cases) + "\n))\n")
-
