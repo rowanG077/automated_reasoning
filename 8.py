@@ -1,14 +1,24 @@
 from z3 import *
 import cairo
 
+# problem = [
+#     [0, 0, 0, 4, 0, 0, 0],
+#     [0, 3, 0, 0, 2, 5, 0],
+#     [0, 0, 0, 3, 1, 0, 0],
+#     [0, 0, 0, 5, 0, 0, 0],
+#     [0, 0, 0, 0, 0, 0, 0],
+#     [0, 0, 1, 0, 0, 0, 0],
+#     [2, 0, 0, 0, 4, 0, 0], 
+# ]
+
 problem = [
-    [0, 0, 0, 4, 0, 0, 0],
-    [0, 3, 0, 0, 2, 5, 0],
-    [0, 0, 0, 3, 1, 0, 0],
-    [0, 0, 0, 5, 0, 0, 0],
+    [1, 4, 0, 0, 0, 0, 0],
+    [0, 0, 3, 0, 0, 2, 0],
+    [5, 0, 0, 4, 0, 0, 3],
     [0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0, 0, 0],
-    [2, 0, 0, 0, 4, 0, 0], 
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 5, 0, 0],
+    [1, 0, 0, 0, 0, 0, 2]
 ]
 
 w = len(problem[0])
@@ -61,12 +71,48 @@ def draw_solution(model):
 
         context.set_font_size(0.65)
         context.set_line_width(0.1)
+        colors = [
+            (1, 0, 0),
+            (0, 1, 0),
+            (0, 0, 1),
+            (1, 1, 0),
+            (1, 0, 1),
+            (0, 1, 1),
+        ]
+
         for y in range(h):
             for x in range(w):
                 n = model[grid[y][x]].as_long()
-                context.set_source_rgba(0, 0, 1, 1)
-                context.move_to(x + 0.075, y + 0.75)
-                context.show_text(f"{n}")
+                r, g, b = colors[n]
+                context.set_source_rgba(r, g, b, 1)
+                if y < h - 1:
+                    v_conn = v_connections[y][x]
+                    if is_true(model[v_conn]):
+                        context.move_to(x + 0.5, y + 0.5)
+                        context.line_to(x + 0.5, y + 1.5)
+                        context.stroke()
+
+                if x < w - 1:
+                    h_conn = h_connections[y][x]
+                    if is_true(model[h_conn]):
+                        context.move_to(x + 0.5, y + 0.5)
+                        context.line_to(x + 1.5, y + 0.5)
+                        context.stroke()
+
+        for y in range(h):
+            for x in range(w):
+                n = model[grid[y][x]].as_long()
+                r, g, b = colors[n]
+                context.set_source_rgba(r, g, b, 1)
+                if problem[y][x] != 0:
+                    context.move_to(x + 0.3, y + 0.75)
+                    context.text_path(f"{n}")
+                    context.set_source_rgb(r, g, b)
+                    context.fill_preserve()
+                    context.set_source_rgb(0, 0, 0)
+                    context.set_line_width(0.02)
+                    context.stroke()
+
 
 s = Solver()
 
@@ -80,17 +126,17 @@ for y in range(h):
         connections = get_connections(y, x)
         existing_connections = filter(lambda x: x != None, connections)
 
+        # set connected cells to same number
+        for conn, dir in zip(connections, [(-1, 0), (1, 0), (0, -1), (0, 1)]):
+            if conn == None:
+                continue
+            c2 = grid[y + dir[1]][x + dir[0]]
+            s.add(Implies(conn, c == c2))
+
         if problem[y][x] != 0:
             s.add(grid[y][x] == problem[y][x])
             s.add(sum_true(existing_connections) == 1)
         else:
-            # set connected cells to same number
-            for conn, dir in zip(connections, [(-1, 0), (1, 0), (0, -1), (0, 1)]):
-                if conn == None:
-                    continue
-                c2 = grid[y + dir[1]][x + dir[0]]
-                s.add(Implies(conn, c == c2))
-
             s.add(sum_true(existing_connections) == 2)
 
 res = s.check()
@@ -99,4 +145,5 @@ if res == unsat:
     sys.exit(1)
 
 model = s.model()
+print(model)
 draw_solution(model)
