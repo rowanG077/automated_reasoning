@@ -13,15 +13,17 @@ route_costs_list = [
     [-1, -1, 20, 20, -1],
 ]
 
+b = True
+
 capacities = [
-    250,
+    260 if b else 250,
     110,
     160,
     110,
     160,
 ]
 
-num_eval = 31
+num_eval = 50 if b else 31
 
 route_costs = Array('routes', IntSort(), ArraySort(IntSort(), IntSort()))
 
@@ -113,6 +115,27 @@ for n in range(num_eval - 1):
 
     # Remove capacity from truck
     s.add(next_truck_store == curr_truck_store - sum(unload))
+
+# exercise 6b
+# check if a storage state is encountered that is strictly
+# better then a previous state.
+# if that happens we have proven we can just always keep
+# using that path and we have solved world hunger
+if b:
+    ors = []
+    for n1 in range(num_eval):
+        for n2 in range(i + 1, num_eval):
+            ands = []
+
+            ands.append(truck_pos[n1] == truck_pos[n2])
+            ands.append(truck_store[n2] >= truck_store[n1])
+
+            for j in range(num_villages):
+                ands.append(village_store[n2][j] >= village_store[n1][j])
+
+            ors.append(And(*ands))
+
+    s.add(Or(*ors))
 
 res = s.check()
 if res == unsat:
