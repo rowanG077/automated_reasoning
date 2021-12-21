@@ -13,7 +13,7 @@ route_costs_list = [
     [-1, -1, 20, 20, -1],
 ]
 
-assignment_b = True
+assignment_b = False
 
 capacities = [
     260 if assignment_b else 250,
@@ -23,7 +23,7 @@ capacities = [
     160,
 ]
 
-num_eval = 15 if assignment_b else 31
+num_eval = 15 if assignment_b else 32
 
 route_costs = Array('routes', IntSort(), ArraySort(IntSort(), IntSort()))
 
@@ -67,6 +67,30 @@ def print_solution(model):
         if n > 0:
             cost = model.eval(route_costs[truck_pos[n-1]][truck_pos[n]]).as_long()
             assert(cost != -1)
+
+            prev_truck_storage = model[truck_store[n - 1]].as_long()
+            prev_a = model[village_store[n - 1][0]].as_long()
+            prev_b = model[village_store[n - 1][1]].as_long()
+            prev_c = model[village_store[n - 1][2]].as_long()
+            prev_d = model[village_store[n - 1][3]].as_long()
+
+            unloaded = [
+                a - (prev_a - cost),
+                b - (prev_b - cost),
+                c - (prev_c - cost),
+                d - (prev_d - cost)
+            ]
+            unloaded = [x for x in unloaded if x != 0]
+
+            assert(len(unloaded) <= 1)
+            if truck_p == 0:
+                unloaded = prev_truck_storage - capacities[0]
+            elif len(unloaded) == 1:
+                unloaded = unloaded[0]
+            else:
+                unloaded = 0
+
+            assert(truck_storage - prev_truck_storage == -unloaded)
 
         print(f"{cycle_arrows[n]}{n:5},         {truck_p},       {truck_storage:03}/{truck_cap:03}, {a:03}/{a_cap:03}, {b:03}/{b_cap:03}, {c:03}/{c_cap:03}, {d:03}/{d_cap:03}")
 
