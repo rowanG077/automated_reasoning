@@ -21,7 +21,7 @@ capacities = [
     160,
 ]
 
-num_eval = 10
+num_eval = 31
 
 route_costs = Array('routes', IntSort(), ArraySort(IntSort(), IntSort()))
 
@@ -45,6 +45,15 @@ def print_solution(model):
         d = model[village_store[n][3]].as_long()
         d_cap = capacities[4]
         
+        assert(a <= a_cap)
+        assert(b <= b_cap)
+        assert(c <= c_cap)
+        assert(d <= d_cap)
+        assert(truck_storage <= truck_cap)
+        if n > 0:
+            cost = model.eval(route_costs[truck_pos[n-1]][truck_pos[n]]).as_long()
+            assert(cost != -1)
+
         print(f"{n:5},         {truck_p},       {truck_storage:03}/{truck_cap:03}, {a:03}/{a_cap:03}, {b:03}/{b_cap:03}, {c:03}/{c_cap:03}, {d:03}/{d_cap:03}")
 
 s = Solver()
@@ -84,19 +93,22 @@ for n in range(num_eval - 1):
         store_next = village_store[n + 1][j]
 
         # Ensure we don't go through 0 when traveling
-        s.add(store_curr - cost >= 0)
+        # and ensure we don't store more then possible
+
+        s.add(store_next - cost >= 0)
 
         # Ensure we only unload at the current location
         unloaded = store_next - (store_curr - cost)
         s.add(If(
             next_loc == (num_stores + j),
-            And(*[unloaded >= 0, unloaded <= curr_truck_store, unloaded <= (capacities[j] - (store_curr + cost))]),
+            And(unloaded >= 0, unloaded <= curr_truck_store),
             unloaded == 0
         ))
 
         unload.append(unloaded)
 
         # set next store
+        s.add(store_next <= capacities[num_stores + j])
         s.add(store_next == (store_curr - cost) + unloaded)
 
     # Remove capacity from truck
