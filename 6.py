@@ -23,7 +23,7 @@ capacities = [
     160,
 ]
 
-num_eval = 15 if assignment_b else 32
+num_eval = 14 if assignment_b else 32
 
 route_costs = Array('routes', IntSort(), ArraySort(IntSort(), IntSort()))
 
@@ -66,13 +66,19 @@ def print_solution(model):
         assert(truck_storage <= truck_cap)
         if n > 0:
             cost = model.eval(route_costs[truck_pos[n-1]][truck_pos[n]]).as_long()
-            assert(cost != -1)
 
             prev_truck_storage = model[truck_store[n - 1]].as_long()
+            assert(cost != -1)
+
             prev_a = model[village_store[n - 1][0]].as_long()
             prev_b = model[village_store[n - 1][1]].as_long()
             prev_c = model[village_store[n - 1][2]].as_long()
             prev_d = model[village_store[n - 1][3]].as_long()
+
+            assert(cost <= prev_a)
+            assert(cost <= prev_b)
+            assert(cost <= prev_c)
+            assert(cost <= prev_d)
 
             unloaded = [
                 a - (prev_a - cost),
@@ -133,7 +139,7 @@ for n in range(num_eval - 1):
         # Ensure we don't go through 0 when traveling
         # and ensure we don't store more then possible
 
-        s.add(store_next - cost >= 0)
+        s.add(store_curr - cost >= 0)
 
         # Ensure we only unload at the current location
         unloaded = store_next - (store_curr - cost)
