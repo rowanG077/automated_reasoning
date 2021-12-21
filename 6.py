@@ -13,17 +13,17 @@ route_costs_list = [
     [-1, -1, 20, 20, -1],
 ]
 
-b = True
+assignment_b = True
 
 capacities = [
-    260 if b else 250,
+    260 if assignment_b else 250,
     110,
     160,
     110,
     160,
 ]
 
-num_eval = 50 if b else 31
+num_eval = 15 if assignment_b else 31
 
 route_costs = Array('routes', IntSort(), ArraySort(IntSort(), IntSort()))
 
@@ -32,8 +32,20 @@ truck_store = [Int(f"truck_store_{i}") for i in range(num_eval)]
 
 village_store = [[Int(f"vilage_store_{chr(ord('A') + v)}_{i}") for v in range(num_villages)] for i in range(num_eval)]
 
+if assignment_b:
+    world_hunger_save = [[Bool(f"world_hunger_{n1}_{n2}") for n2 in range(n1 + 1, num_eval)] for n1 in range(num_eval)]
+
 def print_solution(model):
-    print("cycle, truck pos, truck storage,       A,       B,       C,       D")
+    cycle_arrows = ["   " for i in range(num_eval)]
+
+    if assignment_b:
+        for n1 in range(num_eval):
+            for n2 in range(n1 + 1, num_eval):
+                if is_true(model.eval(world_hunger_save[n1][n2 - n1 - 1])):
+                    cycle_arrows[n1] = "-->"
+                    cycle_arrows[n2] = "-->"
+
+    print("   cycle, truck pos, truck storage,       A,       B,       C,       D")
     for n in range(num_eval):
         truck_p = model[truck_pos[n]].as_long()
         truck_storage = model[truck_store[n]].as_long()
@@ -56,7 +68,7 @@ def print_solution(model):
             cost = model.eval(route_costs[truck_pos[n-1]][truck_pos[n]]).as_long()
             assert(cost != -1)
 
-        print(f"{n:5},         {truck_p},       {truck_storage:03}/{truck_cap:03}, {a:03}/{a_cap:03}, {b:03}/{b_cap:03}, {c:03}/{c_cap:03}, {d:03}/{d_cap:03}")
+        print(f"{cycle_arrows[n]}{n:5},         {truck_p},       {truck_storage:03}/{truck_cap:03}, {a:03}/{a_cap:03}, {b:03}/{b_cap:03}, {c:03}/{c_cap:03}, {d:03}/{d_cap:03}")
 
 s = Solver()
 
@@ -121,10 +133,10 @@ for n in range(num_eval - 1):
 # better then a previous state.
 # if that happens we have proven we can just always keep
 # using that path and we have solved world hunger
-if b:
+if assignment_b:
     ors = []
     for n1 in range(num_eval):
-        for n2 in range(i + 1, num_eval):
+        for n2 in range(n1 + 1, num_eval):
             ands = []
 
             ands.append(truck_pos[n1] == truck_pos[n2])
@@ -133,7 +145,9 @@ if b:
             for j in range(num_villages):
                 ands.append(village_store[n2][j] >= village_store[n1][j])
 
-            ors.append(And(*ands))
+            world_hunger_save[n1][n2 - n1 - 1] = And(*ands)
+
+            ors.append(world_hunger_save[n1][n2 - n1 - 1])
 
     s.add(Or(*ors))
 
@@ -141,9 +155,8 @@ res = s.check()
 if res == unsat:
     print(f"unsat")
 else:
-    model = s.model()
-    print(f"SAT model:")
-    print_solution(model)
+    print(f"SAT")
+    print_solution(s.model())
 
 
 
