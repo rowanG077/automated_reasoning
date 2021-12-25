@@ -1,0 +1,25 @@
+formulas(assumptions).
+
+% rewrite rules, R is a single rewrite step
+R(  a(x, y),           a(y, x)).
+R(  a(x, y),           a(p, a(x, x))).
+R(  a(x, a(y, z)),     a(a(x, y), z)).
+R(  a(x, a(x, x)),     d(x)).
+
+% allow substitution of subterms
+R(x, y)  -> R( a(x, z), a(y, z)).
+R(x, y)  -> R( a(z, x), a(z, y)).
+R(x, y)  -> R( d(x),    d(y)).
+
+% definition of rewrite in one or more steps
+RR(x, x).
+(RR(x, y) & R(y, z)) -> RR(x, z).
+
+end_of_list.
+
+formulas(goals).
+
+% property to check
+RR( a(p, p),           d(d(d(p)))).
+
+end_of_list.

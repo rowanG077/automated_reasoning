@@ -1,0 +1,24 @@
+formulas(assumptions).
+
+% monoid definition
+o(x, o(y, z)) = o(o(x, y), z).
+o(x, i) = x.
+o(i, x) = x.
+
+% a)
+%o(x, x) = i.
+
+% b)
+% o(x, o(x, x)) = i.
+
+% c)
+o(o(x, x), o(x, x)) = i.
+
+end_of_list.
+
+formulas(goals).
+
+% check commutativity
+o(x, y) = o(y, x).
+
+end_of_list.
